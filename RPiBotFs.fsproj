@@ -3,12 +3,12 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Settings.fs"/>
-    <Compile Include="TransmissionModule.fs"/>
-    <Compile Include="BotModule.fs"/>
-    <Compile Include="Startup.fs"/>
-    <Compile Include="Web.fs"/>
-    <Compile Include="Program.fs"/>
+    <Compile Include="src/Settings.fs"/>
+    <Compile Include="src/TransmissionModule.fs"/>
+    <Compile Include="src/BotModule.fs"/>
+    <Compile Include="src/Startup.fs"/>
+    <Compile Include="src/Web.fs"/>
+    <Compile Include="src/Program.fs"/>
   </ItemGroup>
   <Target Name = "CopyFiles" AfterTargets="build">
     <Copy SourceFiles="variables.json" DestinationFolder="$(OutputPath)"/>  
