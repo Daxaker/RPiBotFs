@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Settings.fs"/>
+    <Compile Include="TransmissionModule.fs"/>
+    <Compile Include="BotModule.fs"/>
+    <Compile Include="Startup.fs"/>
+    <Compile Include="Web.fs"/>
+    <Compile Include="Program.fs"/>
+  </ItemGroup>
+  <Target Name = "CopyFiles" AfterTargets="build">
+    <Copy SourceFiles="variables.json" DestinationFolder="$(OutputPath)"/>  
+  </Target>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0"/>
+    <PackageReference Include="Nancy" Version="2.0.0-clinteastwood"/>
+    <PackageReference Include="Nancy.Hosting.Self" Version="2.0.0-clinteastwood"/>
+    <PackageReference Include="Microsoft.Owin" Version="4.0.0"/>
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.*"/>
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.*"/>
+    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.*"/>
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.*"/>
+    <PackageReference Include="Telegram.Bot" Version="14.2.0-rc-452"/>
+    <PackageReference Include="Transmission.API.RPC" Version="2.0.0"/>
+    <PackageReference Include="Newtonsoft.Json.FSharp" Version="3.2.2"/>
+  </ItemGroup>
+</Project>
