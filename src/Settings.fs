@@ -4,7 +4,7 @@ open System
 open System.IO
 open Newtonsoft.Json.Linq
 
-let (?) (item:JObject) param =
+let inline (?) (item:JObject) param =
     item.[param]
 
 let homePath =

@@ -3,7 +3,7 @@ module Web
 open Nancy
 open BotModule 
 
-let (?) (parameters:obj) param =
+let inline (?) (parameters:obj) param =
     (parameters :?> Nancy.DynamicDictionary).[param]
 
 type HelloModule() as self =
