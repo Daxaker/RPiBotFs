@@ -2,6 +2,7 @@ module BotModule
 
 open System
 open System.Collections.Generic
+open System.Collections.Concurrent
 open System.Linq
 open System.IO
 open Telegram.Bot
@@ -19,14 +20,14 @@ type State =
     |WaitForTorrent
 
 let changeState =
-    let map = Dictionary<int64, _>()
-    fun chatId state->
+    let map = ConcurrentDictionary<int64, State>()
+    fun chatId (state: State)->
         match map.TryGetValue chatId with
         |true, value -> 
-            map.[chatId] <- state
+            map.AddOrUpdate(chatId, state, fun _ _ -> state) |> ignore
             value
         |_ -> 
-            map.[chatId] <- state
+            map.AddOrUpdate(chatId, state, fun _ _ -> state) |> ignore
             Empty
 
 let (|Prefix|_|) (p:string) (s:string) =
