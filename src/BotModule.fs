@@ -5,6 +5,7 @@ open System.Collections.Generic
 open System.Collections.Concurrent
 open System.Linq
 open System.IO
+open Akka.FSharp
 open Telegram.Bot
 open Telegram.Bot.Args
 open Telegram.Bot.Types
@@ -14,6 +15,20 @@ open Settings
 
 let private client =
     lazy(new TelegramBotClient(botKey))
+
+let system  = 
+    System.create "mySystem" <| Configuration.defaultConfig()
+
+let myActor (mailbox: Actor<_>) = 
+    let rec loop () = actor {
+        let! message = mailbox.Receive ()
+        do printfn "%s" message
+        return! loop ()
+    }
+    loop ()
+
+let actorRef = 
+    spawn system "myActor" myActor
 
 type State =
     |Empty
@@ -77,6 +92,7 @@ let parseCommand (command:string) (args:MessageEventArgs) =
             changeState args.Message.Chat.Id WaitForTorrent |> ignore
         |_ -> ()   
 let OnMessageReceived (args:MessageEventArgs) =
+    actorRef <! args.Message.Text
     match changeState args.Message.Chat.Id Empty with
         |Empty -> 
             match args.Message.Text with
@@ -119,6 +135,7 @@ let OnCallbackQuery (args:CallbackQueryEventArgs) =
 
 let OnCallbackQueryEventHandler =
     EventHandler<CallbackQueryEventArgs>(fun _ -> OnCallbackQuery)
+
 let Start() =
     if not client.Value.IsReceiving then
         client.Value.OnMessage.AddHandler OnMessageEventHandler
