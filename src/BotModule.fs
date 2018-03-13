@@ -12,114 +12,106 @@ open Telegram.Bot.Types
 open Telegram.Bot.Types.ReplyMarkups
 open TransmissionModule
 open Settings
+open Stateful
 
 let private client =
     lazy(new TelegramBotClient(botKey))
 
+[<AutoOpen>]
+module MessageHelper =
+    let getCallbackButton (torrentInfo: Transmission.API.RPC.Entity.TorrentInfo) =
+        [|InlineKeyboardButton.WithCallbackData(torrentInfo.Name, torrentInfo.ID.ToString())|] :> IEnumerable<InlineKeyboardButton>
+    
+    let sendMessageMarkup markup (chatId:int64) message  =
+        client.Value.SendTextMessageAsync(Types.ChatId chatId, message, Types.Enums.ParseMode.Default,false, false, 0, markup) |> Async.AwaitTask |> Async.Ignore
+        
+    let sendChatMessageMarkup markup (arg: MessageEventArgs) =
+        sendMessageMarkup markup arg.Message.Chat.Id
+
+    let sendChatMessage arg =
+        sendChatMessageMarkup null arg
+        
+
+type Command =
+    |TorrentsList of MessageEventArgs
+    |ActiveTorrents of MessageEventArgs
+    |AddTorrent of MessageEventArgs
+    |RawData of MessageEventArgs
+    |Skip  
+
+
+let rec waitingCommand = function
+    |TorrentsList(args) ->
+        async {
+            try
+                let! torrents = GetTorrentListAsync()
+                let callbackResults = 
+                    torrents.Torrents |> Array.map getCallbackButton
+                let markup = callbackResults |> InlineKeyboardMarkup
+                do! sendChatMessageMarkup markup args "Torrents"
+            with error -> do!  sendChatMessage args error.Message
+         } |> Async.Start
+        Continue
+    |ActiveTorrents(args) ->
+        async {
+            try
+                let! torrents = GetTorrentListAsync()
+                let result = torrents.Torrents |> Array.filter (fun t -> t.ETA > 0)
+                if result |> Array.isEmpty then
+                    do! "Active downloads not found" |> sendChatMessage args
+                else
+                    let str (r:Transmission.API.RPC.Entity.TorrentInfo) =
+                        r.Name + Environment.NewLine + string(TimeSpan.FromSeconds(float r.ETA))
+                    let tasks = result |> Array.map  (fun r -> sendChatMessage args (r |> str))
+                    do! tasks |> Async.Parallel |> Async.Ignore
+            with error -> do! sendChatMessage args error.Message
+        } |> Async.Start     
+        Continue
+    |AddTorrent(args) -> Become(waitTorrentState)
+    |_ -> Continue
+    
+and waitTorrentState = function
+    |RawData(args) -> 
+        async {
+           match args.Message.Type with
+           |Enums.MessageType.Document -> 
+                let filePath =
+                    Path.Combine(Path.GetTempPath(), args.Message.Document.FileName)
+                use stream = File.Create(filePath)
+                do! client.Value.GetInfoAndDownloadFileAsync(args.Message.Document.FileId, stream) |> Async.AwaitTask |> Async.Ignore
+                stream.Dispose() |> ignore
+                do! AddTorrentFileAsync filePath
+                do! sendChatMessage args "File added"
+            |Enums.MessageType.Text -> 
+                do! args.Message.Text |> AddTorrentMagnetAsync
+                do! sendChatMessage args "File added"
+            |_ -> ()
+         } |> Async.Start
+        Become(waitingCommand)
+    |_ -> Become(waitingCommand)
+
 let system  = 
     System.create "mySystem" <| Configuration.defaultConfig()
 
-let myActor (mailbox: Actor<_>) = 
-    let rec loop () = actor {
-        let! message = mailbox.Receive ()
-        do printfn "%s" message
-        return! loop ()
-    }
-    loop ()
-
 let actorRef = 
-    spawn system "myActor" myActor
+    spawn system "myActor" <| statefulActorOf waitingCommand
 
-type State =
-    |Empty
-    |WaitForTorrent
-
-let changeState =
-    let map = ConcurrentDictionary<int64, State>()
-    fun chatId (state: State)->
-        match map.TryGetValue chatId with
-        |true, value -> 
-            map.AddOrUpdate(chatId, state, fun _ _ -> state) |> ignore
-            value
-        |_ -> 
-            map.AddOrUpdate(chatId, state, fun _ _ -> state) |> ignore
-            Empty
-
-let (|Prefix|_|) (p:string) (s:string) =
-    match s with 
-    |null -> None
-    |_ when s.StartsWith(p) -> Some <| s.Substring p.Length
-    |_ -> None 
-let (|InvariantEqual|_|) (str:string) arg = 
-  if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0
-    then Some() else None
-let getCallbackButton (torrentInfo: Transmission.API.RPC.Entity.TorrentInfo) =
-    [|InlineKeyboardButton.WithCallbackData(torrentInfo.Name, torrentInfo.ID.ToString())|] :> IEnumerable<InlineKeyboardButton>
-let sendMessageMarkup markup (chatId:int64) message  =
-    client.Value.SendTextMessageAsync(Types.ChatId chatId, message, Types.Enums.ParseMode.Default,false, false, 0, markup) |> Async.AwaitTask |> Async.Ignore
-let sendChatMessageMarkup markup (arg: MessageEventArgs) =
-    sendMessageMarkup markup arg.Message.Chat.Id
-let sendChatMessage arg =
-    sendChatMessageMarkup null arg
-//TODO: Exception handling
+let nullCheck value =
+    match box value with
+    |null -> String.Empty
+    |_ -> value
 let parseCommand (command:string) (args:MessageEventArgs) =
     match command.ToLower() with
-        |"torrents" -> 
-            async {
-                try
-                    let! torrents = GetTorrentListAsync()
-                    let callbackResults = 
-                        torrents.Torrents |> Array.map getCallbackButton
-                    let markup = callbackResults |> InlineKeyboardMarkup
-                    do! sendChatMessageMarkup markup args "Torrents"
-                with error -> do!  sendChatMessage args error.Message
-            } |> Async.Start
-        |"active" ->
-            async{
-                try
-                    let! torrents = GetTorrentListAsync()
-                    let result = torrents.Torrents |> Array.filter (fun t -> t.ETA > 0)
-                    if result |> Array.isEmpty then
-                        do! "Active downloads not found" |> sendChatMessage args
-                    else
-                        let str (r:Transmission.API.RPC.Entity.TorrentInfo) =
-                            r.Name + Environment.NewLine + string(TimeSpan.FromSeconds(float r.ETA))
-                        let tasks = result |> Array.map  (fun r -> sendChatMessage args (r |> str))
-                        do! tasks |> Async.Parallel |> Async.Ignore
-                with error -> do! sendChatMessage args error.Message
-            } |> Async.Start
-        |"addtorrent" ->
-            changeState args.Message.Chat.Id WaitForTorrent |> ignore
-        |_ -> ()   
+        |"/torrents" -> TorrentsList(args)
+        |"/active" -> ActiveTorrents(args)
+        |"/addtorrent" -> AddTorrent(args)
+        |_ -> RawData(args)   
+
+let sendCommand cmd =
+    actorRef <! cmd
+        
 let OnMessageReceived (args:MessageEventArgs) =
-    actorRef <! args.Message.Text
-    match changeState args.Message.Chat.Id Empty with
-        |Empty -> 
-            match args.Message.Text with
-            |Prefix "/" rest ->
-                args |> parseCommand rest
-            |_ -> ()
-                    
-        |WaitForTorrent -> 
-            match args.Message.Type with
-            |Enums.MessageType.Document -> 
-                async {
-                    let filePath =
-                        Path.Combine(Path.GetTempPath(), args.Message.Document.FileName)
-                    use stream = File.Create(filePath)
-                    do! client.Value.GetInfoAndDownloadFileAsync(args.Message.Document.FileId, stream) |> Async.AwaitTask |> Async.Ignore
-                    stream.Dispose() |> ignore
-                    do! AddTorrentFileAsync filePath
-                    changeState args.Message.Chat.Id Empty |> ignore
-                    do! sendChatMessage args "File added"
-                } |> Async.Start
-            |Enums.MessageType.Text -> 
-                async { 
-                    do! args.Message.Text |> AddTorrentMagnetAsync
-                    changeState args.Message.Chat.Id Empty |> ignore
-                    do! sendChatMessage args "File added"
-                } |> Async.Start
-            |_ -> ()
+    args |> parseCommand (args.Message.Text |> nullCheck) |> sendCommand
 
         
 let OnMessageEventHandler =
