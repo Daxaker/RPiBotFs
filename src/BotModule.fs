@@ -13,24 +13,7 @@ open Telegram.Bot.Types.ReplyMarkups
 open TransmissionModule
 open Settings
 open Stateful
-
-let private client =
-    lazy(new TelegramBotClient(botKey))
-
-[<AutoOpen>]
-module MessageHelper =
-    let getCallbackButton (torrentInfo: Transmission.API.RPC.Entity.TorrentInfo) =
-        [|InlineKeyboardButton.WithCallbackData(torrentInfo.Name, torrentInfo.ID.ToString())|] :> IEnumerable<InlineKeyboardButton>
-    
-    let sendMessageMarkup markup (chatId:int64) message  =
-        client.Value.SendTextMessageAsync(Types.ChatId chatId, message, Types.Enums.ParseMode.Default,false, false, 0, markup) |> Async.AwaitTask |> Async.Ignore
-        
-    let sendChatMessageMarkup markup (arg: MessageEventArgs) =
-        sendMessageMarkup markup arg.Message.Chat.Id
-
-    let sendChatMessage arg =
-        sendChatMessageMarkup null arg
-        
+open MessageHelper
 
 type Command =
     |SingleCommand of Async<unit>
@@ -54,7 +37,7 @@ let activeTorrents args =
             let! torrents = GetTorrentListAsync()
             let result = torrents.Torrents |> Array.filter (fun t -> t.ETA > 0)
             if result |> Array.isEmpty then
-                do! "Active downloads not found" |> sendChatMessage args
+                do! sendChatMessage args "Active downloads not found" 
             else
                 let str (r:Transmission.API.RPC.Entity.TorrentInfo) =
                     r.Name + Environment.NewLine + string(TimeSpan.FromSeconds(float r.ETA))
