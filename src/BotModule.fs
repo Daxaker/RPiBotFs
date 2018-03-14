@@ -33,44 +33,45 @@ module MessageHelper =
         
 
 type Command =
-    |TorrentsList of MessageEventArgs
-    |ActiveTorrents of MessageEventArgs
-    |AddTorrent of MessageEventArgs
+    |SingleCommand of Async<unit>
+    |ChangeState of (Command -> Instruction<Command>)
     |RawData of MessageEventArgs
     |Skip  
 
-
-let rec waitingCommand = function
-    |TorrentsList(args) ->
-        async {
-            try
-                let! torrents = GetTorrentListAsync()
-                let callbackResults = 
-                    torrents.Torrents |> Array.map getCallbackButton
-                let markup = callbackResults |> InlineKeyboardMarkup
-                do! sendChatMessageMarkup markup args "Torrents"
-            with error -> do!  sendChatMessage args error.Message
-         } |> Async.Start
+let torrentsList args =
+     async {
+        try
+            let! torrents = GetTorrentListAsync()
+            let callbackResults = 
+                torrents.Torrents |> Array.map getCallbackButton
+            let markup = callbackResults |> InlineKeyboardMarkup
+            do! sendChatMessageMarkup markup args "Torrents"
+        with error -> do!  sendChatMessage args error.Message
+     }
+let activeTorrents args =
+    async {
+        try
+            let! torrents = GetTorrentListAsync()
+            let result = torrents.Torrents |> Array.filter (fun t -> t.ETA > 0)
+            if result |> Array.isEmpty then
+                do! "Active downloads not found" |> sendChatMessage args
+            else
+                let str (r:Transmission.API.RPC.Entity.TorrentInfo) =
+                    r.Name + Environment.NewLine + string(TimeSpan.FromSeconds(float r.ETA))
+                let tasks = result |> Array.map  (fun r -> sendChatMessage args (r |> str))
+                do! tasks |> Async.Parallel |> Async.Ignore
+        with error -> do! sendChatMessage args error.Message
+    }
+let waitingCommand = function
+    |SingleCommand(fAsync) ->
+        fAsync |> Async.Start
         Continue
-    |ActiveTorrents(args) ->
-        async {
-            try
-                let! torrents = GetTorrentListAsync()
-                let result = torrents.Torrents |> Array.filter (fun t -> t.ETA > 0)
-                if result |> Array.isEmpty then
-                    do! "Active downloads not found" |> sendChatMessage args
-                else
-                    let str (r:Transmission.API.RPC.Entity.TorrentInfo) =
-                        r.Name + Environment.NewLine + string(TimeSpan.FromSeconds(float r.ETA))
-                    let tasks = result |> Array.map  (fun r -> sendChatMessage args (r |> str))
-                    do! tasks |> Async.Parallel |> Async.Ignore
-            with error -> do! sendChatMessage args error.Message
-        } |> Async.Start     
-        Continue
-    |AddTorrent(args) -> Become(waitTorrentState)
-    |_ -> Continue
+    |ChangeState(newState) -> 
+        Become(newState)
+    |_ -> Unhandled
     
-and waitTorrentState = function
+let waitTorrentState cmd = 
+    match cmd with
     |RawData(args) -> 
         async {
            match args.Message.Type with
@@ -87,8 +88,8 @@ and waitTorrentState = function
                 do! sendChatMessage args "File added"
             |_ -> ()
          } |> Async.Start
-        Become(waitingCommand)
-    |_ -> Become(waitingCommand)
+    |_ -> ()
+    Become(waitingCommand)
 
 let system  = 
     System.create "mySystem" <| Configuration.defaultConfig()
@@ -102,9 +103,9 @@ let nullCheck value =
     |_ -> value
 let parseCommand (command:string) (args:MessageEventArgs) =
     match command.ToLower() with
-        |"/torrents" -> TorrentsList(args)
-        |"/active" -> ActiveTorrents(args)
-        |"/addtorrent" -> AddTorrent(args)
+        |"/torrents" -> SingleCommand(torrentsList args)
+        |"/active" -> SingleCommand(activeTorrents args)
+        |"/addtorrent" -> ChangeState(waitTorrentState)
         |_ -> RawData(args)   
 
 let sendCommand cmd =
