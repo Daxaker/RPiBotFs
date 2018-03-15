@@ -1,4 +1,4 @@
-module MessageHelper
+module TelegramBotClientModule
 
 open System.Collections.Generic
 open Telegram.Bot

@@ -1,4 +1,7 @@
 {
     "transmission":"",
-    "bot_key":""
+    "bot_key":"",
+    "ftp_path":"/tmp",
+    "listening_port":"9090"
+    
 }

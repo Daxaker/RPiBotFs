@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src/Settings.fs" />
-    <Compile Include="src/TelegramBotClientHelper.fs"/>
+    <Compile Include="src\TelegramBotClientModule.fs" />
     <Compile Include="src/Stateful.fs" />
     <Compile Include="src/TransmissionModule.fs" />
     <Compile Include="src/BotModule.fs" />

@@ -13,7 +13,7 @@ open Telegram.Bot.Types.ReplyMarkups
 open TransmissionModule
 open Settings
 open Stateful
-open MessageHelper
+open TelegramBotClientModule
 
 type Command =
     |SingleCommand of Async<unit>
@@ -21,30 +21,32 @@ type Command =
     |RawData of MessageEventArgs
     |Skip  
 
-let torrentsList args =
-     async {
-        try
-            let! torrents = GetTorrentListAsync()
-            let callbackResults = 
-                torrents.Torrents |> Array.map getCallbackButton
-            let markup = callbackResults |> InlineKeyboardMarkup
-            do! sendChatMessageMarkup markup args "Torrents"
-        with error -> do!  sendChatMessage args error.Message
-     }
-let activeTorrents args =
-    async {
-        try
-            let! torrents = GetTorrentListAsync()
-            let result = torrents.Torrents |> Array.filter (fun t -> t.ETA > 0)
-            if result |> Array.isEmpty then
-                do! sendChatMessage args "Active downloads not found" 
-            else
-                let str (r:Transmission.API.RPC.Entity.TorrentInfo) =
-                    r.Name + Environment.NewLine + string(TimeSpan.FromSeconds(float r.ETA))
-                let tasks = result |> Array.map  (fun r -> sendChatMessage args (r |> str))
-                do! tasks |> Async.Parallel |> Async.Ignore
-        with error -> do! sendChatMessage args error.Message
-    }
+let torrentsList args = async {
+    try
+        let! torrents = GetTorrentListAsync()
+        let callbackResults = 
+            torrents.Torrents |> Array.map getCallbackButton
+        let markup = callbackResults |> InlineKeyboardMarkup
+        do! sendChatMessageMarkup markup args "Torrents"
+    with error -> do!  sendChatMessage args error.Message
+}
+     
+let activeTorrents args = async {
+    try
+        let! torrents = GetTorrentListAsync()
+        let result = torrents.Torrents |> Array.filter (fun t -> t.ETA <> -1)
+        if result |> Array.isEmpty then
+            do! sendChatMessage args "Active downloads not found" 
+        else
+            let str (r:Transmission.API.RPC.Entity.TorrentInfo) =
+                r.Name + Environment.NewLine + if r.ETA > 0 then 
+                                                string( TimeSpan.FromSeconds(float r.ETA))  
+                                               else "Unknown"
+            let tasks = result |> Array.map  (fun r -> sendChatMessage args (r |> str))
+            do! tasks |> Async.Parallel |> Async.Ignore
+    with error -> do! sendChatMessage args error.Message
+}
+    
 let waitingCommand = function
     |SingleCommand(fAsync) ->
         fAsync |> Async.Start
@@ -70,9 +72,10 @@ let waitTorrentState cmd =
                 do! args.Message.Text |> AddTorrentMagnetAsync
                 do! sendChatMessage args "File added"
             |_ -> ()
-         } |> Async.Start
-    |_ -> ()
-    Become(waitingCommand)
+        } |> Async.Start
+        Become(waitingCommand)
+    |_ -> UnhandledWithBecome(waitingCommand)
+    
 
 let system  = 
     System.create "mySystem" <| Configuration.defaultConfig()
@@ -84,6 +87,7 @@ let nullCheck value =
     match box value with
     |null -> String.Empty
     |_ -> value
+    
 let parseCommand (command:string) (args:MessageEventArgs) =
     match command.ToLower() with
         |"/torrents" -> SingleCommand(torrentsList args)

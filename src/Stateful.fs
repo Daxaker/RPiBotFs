@@ -6,6 +6,7 @@ type Handler<'TMessage> = 'TMessage -> Instruction<'TMessage>
 and Instruction<'TMessage> =
     |Continue
     |Become of (Handler<'TMessage>)
+    |UnhandledWithBecome of (Handler<'TMessage>)
     |Unhandled
     |Stop
     
@@ -18,7 +19,9 @@ let statefulActorOf handler (mailbox: Actor<_>) =
             |Continue  -> Some(runHandler), true
             |Become (handler') -> Some(handler'), true
             |Unhandled -> Some(runHandler), false
+            |UnhandledWithBecome (handler') -> Some(handler'), false 
             |Stop -> None, true
+            
         if not <| handled then
             mailbox.Unhandled(message)
         

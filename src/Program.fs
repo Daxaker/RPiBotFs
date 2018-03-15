@@ -2,6 +2,7 @@ namespace RPiBotFs
 
 open Microsoft.AspNetCore.Hosting
 open System.IO
+open Settings
 
 module Program =
     let exitCode = 0
@@ -13,6 +14,7 @@ module Program =
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseKestrel()
                 .UseStartup<Startup>()
+                .UseUrls(sprintf "http://+:%s" listeningPort)
                 .Build()
         host.Run();
         exitCode

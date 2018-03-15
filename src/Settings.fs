@@ -7,6 +7,8 @@ open Newtonsoft.Json.Linq
 let inline (?) (item:JObject) param =
     item.[param]
 
+let defaultPort = "9090"
+
 let homePath =
     if (Environment.OSVersion.Platform = PlatformID.Unix || Environment.OSVersion.Platform = PlatformID.MacOSX) then
         Environment.GetEnvironmentVariable("HOME")
@@ -28,3 +30,13 @@ let transmissionAddress =
 
 let botKey =
     (settings?bot_key).Value<string>()
+
+let ftpPath =
+    (settings?ftp_path).Value<string>()
+
+let listeningPort =
+    let value = (settings?listening_port)
+    if isNull value then
+        defaultPort
+    else
+        value.Value<string>()
