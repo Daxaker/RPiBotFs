@@ -1,8 +1,6 @@
 module BotModule
 
 open System
-open System.Collections.Generic
-open System.Collections.Concurrent
 open System.Linq
 open System.IO
 open Akka.FSharp
@@ -16,10 +14,17 @@ open Stateful
 open TelegramBotClientModule
 
 type Command =
+    |NonSecureRequest of Async<unit>
     |SingleCommand of Async<unit>
     |ChangeState of (Command -> Instruction<Command>)
     |RawData of MessageEventArgs
     |Skip  
+
+type Request = {
+    UserChatId: int64 
+    Command:Command
+}
+
 
 let torrentsList args = async {
     try
@@ -46,9 +51,12 @@ let activeTorrents args = async {
             do! tasks |> Async.Parallel |> Async.Ignore
     with error -> do! sendChatMessage args error.Message
 }
-    
-let waitingCommand = function
-    |SingleCommand(fAsync) ->
+let whoAmI (args:MessageEventArgs) = async {
+    let chatId = args.Message.Chat.Id
+    do! sendChatMessage args <| sprintf "Chat id is %d" chatId
+}     
+let waitingCommandState = function
+    |SingleCommand(fAsync) | NonSecureRequest(fAsync) ->
         fAsync |> Async.Start
         Continue
     |ChangeState(newState) -> 
@@ -73,15 +81,14 @@ let waitTorrentState cmd =
                 do! sendChatMessage args "File added"
             |_ -> ()
         } |> Async.Start
-        Become(waitingCommand)
-    |_ -> UnhandledWithBecome(waitingCommand)
-    
+        Become(waitingCommandState)
+    |_ -> UnhandledWithBecome(waitingCommandState)
 
 let system  = 
     System.create "mySystem" <| Configuration.defaultConfig()
 
 let actorRef = 
-    spawn system "myActor" <| statefulActorOf waitingCommand
+    spawn system "myActor" <| statefulActorOf waitingCommandState
 
 let nullCheck value =
     match box value with
@@ -89,14 +96,23 @@ let nullCheck value =
     |_ -> value
     
 let parseCommand (command:string) (args:MessageEventArgs) =
+    let chatId = args.Message.Chat.Id
+    let createRequest cmd =
+        {UserChatId = chatId; Command=cmd}
     match command.ToLower() with
-        |"/torrents" -> SingleCommand(torrentsList args)
-        |"/active" -> SingleCommand(activeTorrents args)
-        |"/addtorrent" -> ChangeState(waitTorrentState)
-        |_ -> RawData(args)   
+        |"/whoami" -> NonSecureRequest(whoAmI args) |> createRequest
+        |"/torrents" -> SingleCommand(torrentsList args) |> createRequest
+        |"/active" -> SingleCommand(activeTorrents args)|> createRequest 
+        |"/addtorrent" -> ChangeState(waitTorrentState)|> createRequest 
+        |_ -> RawData(args) |> createRequest   
 
-let sendCommand cmd =
-    actorRef <! cmd
+let isAuthorized = function
+    |{UserChatId = _; Command = NonSecureRequest _} -> true
+    |{UserChatId = chatId; Command = _} -> inWhitelist <| string chatId
+
+let sendCommand (cmd:Request) =
+    if isAuthorized cmd then
+        actorRef <! cmd.Command
         
 let OnMessageReceived (args:MessageEventArgs) =
     args |> parseCommand (args.Message.Text |> nullCheck) |> sendCommand
@@ -128,5 +144,9 @@ let Stop() =
         client.Value.OnMessage.RemoveHandler OnMessageEventHandler
         client.Value.OnCallbackQuery.RemoveHandler OnCallbackQueryEventHandler
 
+let ShowConfig() = 
+    match ReadConfiguration() with
+    |Some c -> c.Root.ToString()
+    |_ -> failwith "No config file"
 let TestMe() =
     client.Value.TestApiAsync()

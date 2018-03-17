@@ -2,6 +2,7 @@
     "transmission":"",
     "bot_key":"",
     "ftp_path":"/tmp",
-    "listening_port":"9090"
-    
+    "listening_port":"9090",
+    "white_list_enabled":false,
+    "white_list":[]
 }
