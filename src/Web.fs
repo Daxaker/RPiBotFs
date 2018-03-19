@@ -11,4 +11,4 @@ type HelloModule() as self =
     do
         self.Get("/start", fun _ -> Start())
         self.Get("/stop", fun _ -> Stop())
-        self.Get("/showConfig", fun _ -> ShowConfig())
+        self.Get("/showConfig", fun _ -> self.Response.AsJson(ShowConfig()))

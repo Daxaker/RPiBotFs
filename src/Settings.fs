@@ -3,6 +3,9 @@ module Settings
 open System
 open System.IO
 open Newtonsoft.Json.Linq
+open Newtonsoft.Json.Serialization
+open System
+open Newtonsoft.Json
 
 [<Literal>]
 let DefaultPort = "9090"
@@ -27,26 +30,35 @@ let WhiteList = "white_list"
 [<Literal>]
 let ListeningPort = "listening_port"
 
+type JConfig = {
+    [<JsonProperty(PropertyName = "transmission")>]
+    transmission:string
+    [<JsonProperty(PropertyName = "bot_key")>]
+    botKey:string
+    [<JsonProperty(PropertyName = "ftp_path")>]
+    ftpPath:string
+    [<JsonProperty(PropertyName = "white_list_enabled")>]
+    isWhiteListEnabled:bool
+    [<JsonProperty(PropertyName = "white_list")>]
+    whiteList:string[]
+    [<System.ComponentModel.DefaultValue(9090)>]
+    [<JsonProperty(PropertyName = "listening_port", DefaultValueHandling=DefaultValueHandling.Populate)>]
+    listeningPort:int
+}
+
 let getValue<'a> token (def:'a) = 
     match token with
-    |Some (j:JToken) -> j.Value<'a>()
-    |_ -> def
-
-let getParam param (item:JObject option) =
-    match item with
-    |Some itm ->
-        let value = itm.[param]
-        if  value |> isNull then
-            None
-        else
-            Some(value)
-    |_ -> None
+    |Some (s) -> s 
+    |None -> def
 
 let stringValue st =
     getValue st String.Empty
 
 let boolValue bt =
     getValue bt false
+
+let arrayValue arr =
+    getValue arr [||]
 
 let homePath =
     if (Environment.OSVersion.Platform = PlatformID.Unix || Environment.OSVersion.Platform = PlatformID.MacOSX) then
@@ -60,51 +72,52 @@ let private path =
 let settings =
     let userSettings =
         if File.Exists path then
-            Some(JObject.Parse(File.ReadAllText(path)))
+            Some(JObject.Parse(File.ReadAllText(path)).ToObject<JConfig>())
         else
             None
     let appSettings =
-        JObject.Parse(File.ReadAllText(AppSettingsFile))
+        JObject.Parse(File.ReadAllText(AppSettingsFile)).ToObject<JConfig>()
     seq {
         yield userSettings
         yield Some(appSettings)
     } 
 
-let private tryGetValue param = 
-    settings |> Seq.tryPick (param |> getParam)
+let (?) (this : #seq<JConfig option>) prop: 'Result option =
+  let pick toption = 
+    try
+        let t = toption |> Option.get
+        let v = t.GetType().GetProperty(prop).GetValue(t, null)
+        if v |> isNull |> not then 
+            Some(v :?> 'Result)
+        else None
+    with _ -> printfn "JConfig param %s missing" prop 
+              None
+  this |> Seq.tryPick pick
 
 let transmissionAddress =
-    stringValue <| tryGetValue TransmissionAddress
+    stringValue settings?transmission
 
 let botKey =
-    stringValue <| tryGetValue BotKey
+    stringValue settings?botKey
 
 let ftpPath =
-    stringValue <| tryGetValue FtpPath
+    stringValue settings?ftpPath
 
 let isWhiteListEnabled =
-    tryGetValue IsWhiteListEnabled
+    boolValue settings?isWhiteListEnabled
 
-let whiteList = 
-    tryGetValue WhiteList
+let whiteListArray:string[] = 
+    arrayValue settings?whiteList
 
 let inWhitelist user =
-    if isWhiteListEnabled |> boolValue |> not then
+    if isWhiteListEnabled |> not then
         true
     else
-        let innerArray = 
-            let value = whiteList
-            match value with
-            |Some v -> Some(v.Value<JArray>().Values<string>())
-            |_ -> None
-        innerArray.IsSome && innerArray |> Option.get |> Seq.exists (fun x -> user = x)
+        let innerArray = whiteListArray
+        innerArray |> Seq.exists (fun x -> user = x)
 
-let listeningPort =
-    let value = stringValue <| tryGetValue ListeningPort
-    if String.IsNullOrWhiteSpace value then
-        DefaultPort
-    else
-        value
+let webInterfacePort:int =
+    settings?listeningPort |> Option.get
 
 let ReadConfiguration() =
     settings |> Seq.tryPick id

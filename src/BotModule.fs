@@ -25,7 +25,6 @@ type Request = {
     Command:Command
 }
 
-
 let torrentsList args = async {
     try
         let! torrents = GetTorrentListAsync()
@@ -62,7 +61,7 @@ let waitingCommandState = function
     |ChangeState(newState) -> 
         Become(newState)
     |_ -> Unhandled
-    
+   
 let waitTorrentState cmd = 
     match cmd with
     |RawData(args) -> 
@@ -84,6 +83,12 @@ let waitTorrentState cmd =
         Become(waitingCommandState)
     |_ -> UnhandledWithBecome(waitingCommandState)
 
+let addTorrent args cmd = 
+    async {
+        do! sendChatMessage args "Waiting for torrent"
+    } |> Async.Start
+    cmd
+
 let system  = 
     System.create "mySystem" <| Configuration.defaultConfig()
 
@@ -103,7 +108,7 @@ let parseCommand (command:string) (args:MessageEventArgs) =
         |"/whoami" -> NonSecureRequest(whoAmI args) |> createRequest
         |"/torrents" -> SingleCommand(torrentsList args) |> createRequest
         |"/active" -> SingleCommand(activeTorrents args)|> createRequest 
-        |"/addtorrent" -> ChangeState(waitTorrentState)|> createRequest 
+        |"/addtorrent" -> ChangeState(waitTorrentState) |> addTorrent args |> createRequest 
         |_ -> RawData(args) |> createRequest   
 
 let isAuthorized = function
@@ -144,9 +149,7 @@ let Stop() =
         client.Value.OnMessage.RemoveHandler OnMessageEventHandler
         client.Value.OnCallbackQuery.RemoveHandler OnCallbackQueryEventHandler
 
-let ShowConfig() = 
-    match ReadConfiguration() with
-    |Some c -> c.Root.ToString()
-    |_ -> failwith "No config file"
+let ShowConfig() = ReadConfiguration() |> Option.get
+    
 let TestMe() =
     client.Value.TestApiAsync()

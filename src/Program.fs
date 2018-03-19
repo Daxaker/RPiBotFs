@@ -14,7 +14,7 @@ module Program =
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseKestrel()
                 .UseStartup<Startup>()
-                .UseUrls(sprintf "http://+:%s" listeningPort)
+                .UseUrls(sprintf "http://+:%d" webInterfacePort)
                 .Build()
         host.Run();
         exitCode
