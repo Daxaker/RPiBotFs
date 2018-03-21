@@ -41,9 +41,8 @@ type JConfig = {
     isWhiteListEnabled:bool
     [<JsonProperty(PropertyName = "white_list")>]
     whiteList:string[]
-    [<System.ComponentModel.DefaultValue(9090)>]
-    [<JsonProperty(PropertyName = "listening_port", DefaultValueHandling=DefaultValueHandling.Populate)>]
-    listeningPort:int
+    [<JsonProperty(PropertyName = "listening_port")>]
+    listeningPort:Nullable<int>
 }
 
 let getValue<'a> token (def:'a) = 
