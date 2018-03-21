@@ -10,20 +10,8 @@ open Telegram.Bot.Types
 open Telegram.Bot.Types.ReplyMarkups
 open TransmissionModule
 open Settings
-open Stateful
+open Contracts
 open TelegramBotClientModule
-
-type Command =
-    |NonSecureRequest of Async<unit>
-    |SingleCommand of Async<unit>
-    |ChangeState of (Command -> Instruction<Command>)
-    |RawData of MessageEventArgs
-    |Skip  
-
-type Request = {
-    UserChatId: int64 
-    Command:Command
-}
 
 let torrentsList args = async {
     try
@@ -53,7 +41,8 @@ let activeTorrents args = async {
 let whoAmI (args:MessageEventArgs) = async {
     let chatId = args.Message.Chat.Id
     do! sendChatMessage args <| sprintf "Chat id is %d" chatId
-}     
+}
+
 let waitingCommandState = function
     |SingleCommand(fAsync) | NonSecureRequest(fAsync) ->
         fAsync |> Async.Start
@@ -105,6 +94,7 @@ let parseCommand (command:string) (args:MessageEventArgs) =
     let createRequest cmd =
         {UserChatId = chatId; Command=cmd}
     match command.ToLower() with
+        |"/reset" -> SetDefaultHandler |> createRequest
         |"/whoami" -> NonSecureRequest(whoAmI args) |> createRequest
         |"/torrents" -> SingleCommand(torrentsList args) |> createRequest
         |"/active" -> SingleCommand(activeTorrents args)|> createRequest 
@@ -116,8 +106,11 @@ let isAuthorized = function
     |{UserChatId = chatId; Command = _} -> inWhitelist <| string chatId
 
 let sendCommand (cmd:Request) =
-    if isAuthorized cmd then
-        actorRef <! cmd.Command
+    match cmd.Command with 
+    |SetDefaultHandler -> actorRef <! Reset
+    |c ->
+        if isAuthorized cmd then
+            actorRef <! cmd.Command
         
 let OnMessageReceived (args:MessageEventArgs) =
     args |> parseCommand (args.Message.Text |> nullCheck) |> sendCommand

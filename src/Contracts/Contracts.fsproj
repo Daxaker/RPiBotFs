@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Contracts.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Akka" Version="1.2.3" />
+    <PackageReference Include="Akka.FSharp" Version="1.2.3" />
+    <PackageReference Include="Telegram.Bot" Version="14.2.0-rc-452" />
+  </ItemGroup>
+</Project>

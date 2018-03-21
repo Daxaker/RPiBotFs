@@ -8,8 +8,6 @@ open System
 open Newtonsoft.Json
 
 [<Literal>]
-let DefaultPort = "9090"
-[<Literal>]
 let UserSettingsPath = ".config/rpibot.json"
 [<Literal>]
 let HomePathNix = "HOME"
@@ -17,18 +15,6 @@ let HomePathNix = "HOME"
 let HomePathWindows = "%HOMEDRIVE%%HOMEPATH%"
 [<Literal>]
 let AppSettingsFile = "variables.json"
-[<Literal>]
-let TransmissionAddress = "transmission"
-[<Literal>]
-let BotKey = "bot_key"
-[<Literal>]
-let FtpPath = "ftp_path"
-[<Literal>]
-let IsWhiteListEnabled = "white_list_enabled"
-[<Literal>]
-let WhiteList = "white_list"
-[<Literal>]
-let ListeningPort = "listening_port"
 
 type JConfig = {
     [<JsonProperty(PropertyName = "transmission")>]
