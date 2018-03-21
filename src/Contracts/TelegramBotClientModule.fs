@@ -1,4 +1,5 @@
-module TelegramBotClientModule
+[<AutoOpen>]
+module TelegramModule
 
 open System.Collections.Generic
 open Telegram.Bot
@@ -10,8 +11,8 @@ open Settings
 let client =
     lazy(new TelegramBotClient(botKey))
 
-let getCallbackButton (torrentInfo: Transmission.API.RPC.Entity.TorrentInfo) =
-    [|InlineKeyboardButton.WithCallbackData(torrentInfo.Name, torrentInfo.ID.ToString())|] :> IEnumerable<InlineKeyboardButton>
+let getCallbackButton caption response =
+    [|InlineKeyboardButton.WithCallbackData(caption, response)|] :> IEnumerable<InlineKeyboardButton>
 
 let sendMessageMarkup markup (chatId:int64) message =
     client.Value.SendTextMessageAsync(Types.ChatId chatId, message, Types.Enums.ParseMode.Default,false, false, 0, markup) |> Async.AwaitTask |> Async.Ignore

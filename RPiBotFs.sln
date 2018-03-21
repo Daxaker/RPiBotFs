@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.0.0
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "RPiBotFs", "src/RPiBotFs.fsproj", "{4E453A78-9A74-43D9-AD0E-698F34FFE866}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Contracts", "src/Contracts\Contracts.fsproj", "{095D5D59-992E-4EF7-BAB5-B02BC074A5FD}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TransmissionModule", "src\Transmission.RPIExtension\Transmission.RPIExtension.fsproj", "{DA16A27A-C583-4B59-B2ED-B2C2ADCE1491}"
+EndProject
+Global
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E453A78-9A74-43D9-AD0E-698F34FFE866}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E453A78-9A74-43D9-AD0E-698F34FFE866}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E453A78-9A74-43D9-AD0E-698F34FFE866}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E453A78-9A74-43D9-AD0E-698F34FFE866}.Release|Any CPU.Build.0 = Release|Any CPU
+		{095D5D59-992E-4EF7-BAB5-B02BC074A5FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{095D5D59-992E-4EF7-BAB5-B02BC074A5FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{095D5D59-992E-4EF7-BAB5-B02BC074A5FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{095D5D59-992E-4EF7-BAB5-B02BC074A5FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA16A27A-C583-4B59-B2ED-B2C2ADCE1491}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA16A27A-C583-4B59-B2ED-B2C2ADCE1491}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA16A27A-C583-4B59-B2ED-B2C2ADCE1491}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA16A27A-C583-4B59-B2ED-B2C2ADCE1491}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,6 +1,5 @@
 .vscode
 .idea
-*.sln
 bin/
 obj/
 published/

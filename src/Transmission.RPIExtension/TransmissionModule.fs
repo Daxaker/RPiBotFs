@@ -33,4 +33,3 @@ let AddTorrentMagnetAsync magnet =
         let t = NewTorrent(Filename = magnet, Paused = false)
         do! client.Value.TorrentAddAsync(t) |> Async.AwaitTask |> Async.Ignore
     }
-            
