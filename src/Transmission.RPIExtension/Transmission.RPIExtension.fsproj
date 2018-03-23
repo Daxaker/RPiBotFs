@@ -2,6 +2,12 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>../bin/Debug/netcoreapp2.0/extensions/</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>../bin/Release/netcoreapp2.0/extensions/</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="TransmissionModule.fs" />
     <Compile Include="TransmissionService.fs" />

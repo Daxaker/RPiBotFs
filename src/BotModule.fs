@@ -14,18 +14,20 @@ open Autofac
 open System.Diagnostics
 
 let listeners() = 
-    let extensionsDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),"extensions")
-    let extensions = Directory.GetFiles(extensionsDir, "*.RPIExtension.dll")
-    let builder = new ContainerBuilder()
-    let map x =
-        let addon = Assembly.LoadFrom(x)
-        do builder.RegisterAssemblyTypes(addon).As<IListenerService>() |> ignore
-        
-    do extensions |> Seq.iter map
-    let container = builder.Build()
-    let lt = container.BeginLifetimeScope()
-    let ex = lt.Resolve<seq<IListenerService>>()
-    List.ofSeq ex
+    try
+        let extensionsDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),"extensions")
+        let extensions = Directory.GetFiles(extensionsDir, "*.RPIExtension.dll")
+        let builder = new ContainerBuilder()
+        let map x =
+            let addon = Assembly.LoadFrom(x)
+            do builder.RegisterAssemblyTypes(addon).As<IListenerService>() |> ignore
+            
+        do extensions |> Seq.iter map
+        let container = builder.Build()
+        let lt = container.BeginLifetimeScope()
+        let ex = lt.Resolve<seq<IListenerService>>()
+        List.ofSeq ex
+    with exn -> printf "FAIL: %A" exn; List.empty
     
 let system  = 
     System.create "mySystem" <| Configuration.defaultConfig()
