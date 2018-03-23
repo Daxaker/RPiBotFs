@@ -1,4 +1,4 @@
-module Settings
+namespace Contracts
 
 open System
 open System.IO
@@ -6,15 +6,6 @@ open Newtonsoft.Json.Linq
 open Newtonsoft.Json.Serialization
 open System
 open Newtonsoft.Json
-
-[<Literal>]
-let UserSettingsPath = ".config/rpibot.json"
-[<Literal>]
-let HomePathNix = "HOME"
-[<Literal>]
-let HomePathWindows = "%HOMEDRIVE%%HOMEPATH%"
-[<Literal>]
-let AppSettingsFile = "variables.json"
 
 type JConfig = {
     [<JsonProperty(PropertyName = "transmission")>]
@@ -30,79 +21,90 @@ type JConfig = {
     [<JsonProperty(PropertyName = "listening_port")>]
     listeningPort:Nullable<int>
 }
+[<AutoOpen>]
+module Settings =
 
-let getValue<'a> token (def:'a) = 
-    match token with
-    |Some (s) -> s 
-    |None -> def
-
-let stringValue st =
-    getValue st String.Empty
-
-let boolValue bt =
-    getValue bt false
-
-let arrayValue arr =
-    getValue arr [||]
-
-let homePath =
-    if (Environment.OSVersion.Platform = PlatformID.Unix || Environment.OSVersion.Platform = PlatformID.MacOSX) then
-        Environment.GetEnvironmentVariable(HomePathNix)
-    else
-        Environment.ExpandEnvironmentVariables(HomePathWindows);
-
-let private path =
-    Path.Combine(homePath, UserSettingsPath)
-
-let settings =
-    let userSettings =
-        if File.Exists path then
-            Some(JObject.Parse(File.ReadAllText(path)).ToObject<JConfig>())
+    [<Literal>]
+    let UserSettingsPath = ".config/rpibot.json"
+    [<Literal>]
+    let HomePathNix = "HOME"
+    [<Literal>]
+    let HomePathWindows = "%HOMEDRIVE%%HOMEPATH%"
+    [<Literal>]
+    let AppSettingsFile = "variables.json"
+    
+    let getValue<'a> token (def:'a) = 
+        match token with
+        |Some (s) -> s 
+        |None -> def
+    
+    let stringValue st =
+        getValue st String.Empty
+    
+    let boolValue bt =
+        getValue bt false
+    
+    let arrayValue arr =
+        getValue arr [||]
+    
+    let homePath =
+        if (Environment.OSVersion.Platform = PlatformID.Unix || Environment.OSVersion.Platform = PlatformID.MacOSX) then
+            Environment.GetEnvironmentVariable(HomePathNix)
         else
-            None
-    let appSettings =
-        JObject.Parse(File.ReadAllText(AppSettingsFile)).ToObject<JConfig>()
-    seq {
-        yield userSettings
-        yield Some(appSettings)
-    } 
-
-let (?) (this : #seq<JConfig option>) prop: 'Result option =
-  let pick toption = 
-    try
-        let t = toption |> Option.get
-        let v = t.GetType().GetProperty(prop).GetValue(t, null)
-        if v |> isNull |> not then 
-            Some(v :?> 'Result)
-        else None
-    with _ -> printfn "JConfig param %s missing" prop 
-              None
-  this |> Seq.tryPick pick
-
-let transmissionAddress =
-    stringValue settings?transmission
-
-let botKey =
-    stringValue settings?botKey
-
-let ftpPath =
-    stringValue settings?ftpPath
-
-let isWhiteListEnabled =
-    boolValue settings?isWhiteListEnabled
-
-let whiteListArray:string[] = 
-    arrayValue settings?whiteList
-
-let inWhitelist user =
-    if isWhiteListEnabled |> not then
-        true
-    else
-        let innerArray = whiteListArray
-        innerArray |> Seq.exists (fun x -> user = x)
-
-let webInterfacePort:int =
-    settings?listeningPort |> Option.get
-
-let ReadConfiguration() =
-    settings |> Seq.tryPick id
+            Environment.ExpandEnvironmentVariables(HomePathWindows);
+    
+    let private path =
+        Path.Combine(homePath, UserSettingsPath)
+    
+    let settings =
+        let userSettings =
+            if File.Exists path then
+                Some(JObject.Parse(File.ReadAllText(path)).ToObject<JConfig>())
+            else
+                None
+        let appSettings =
+            JObject.Parse(File.ReadAllText(AppSettingsFile)).ToObject<JConfig>()
+        seq {
+            yield userSettings
+            yield Some(appSettings)
+        } 
+    
+    let (?) (this : #seq<JConfig option>) prop: 'Result option =
+      let pick toption = 
+        try
+            let t = toption |> Option.get
+            let v = t.GetType().GetProperty(prop).GetValue(t, null)
+            if v |> isNull |> not then 
+                Some(v :?> 'Result)
+            else None
+        with _ -> printfn "JConfig param %s missing" prop 
+                  None
+      this |> Seq.tryPick pick
+    
+    let transmissionAddress =
+        stringValue settings?transmission
+    
+    let botKey =
+        stringValue settings?botKey
+    
+    let ftpPath =
+        stringValue settings?ftpPath
+    
+    let isWhiteListEnabled =
+        boolValue settings?isWhiteListEnabled
+    
+    let whiteListArray:string[] = 
+        arrayValue settings?whiteList
+    
+    let inWhitelist user =
+        if isWhiteListEnabled |> not then
+            true
+        else
+            let innerArray = whiteListArray
+            innerArray |> Seq.exists (fun x -> user = x)
+    
+    let webInterfacePort:int =
+        settings?listeningPort |> Option.get
+    
+    let ReadConfiguration() =
+        settings |> Seq.tryPick id

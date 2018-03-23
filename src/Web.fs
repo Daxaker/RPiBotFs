@@ -1,10 +1,13 @@
-module Web
+namespace RPiBotFs 
 
 open Nancy
 open BotModule 
 
-let inline (?) (parameters:obj) param =
-    (parameters :?> Nancy.DynamicDictionary).[param]
+[<AutoOpen>]
+module Web =
+    
+    let inline (?) (parameters:obj) param =
+        (parameters :?> Nancy.DynamicDictionary).[param]
 
 type HelloModule() as self =
     inherit NancyModule()

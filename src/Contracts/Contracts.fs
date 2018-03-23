@@ -1,4 +1,4 @@
-module Contracts
+namespace Contracts
 
 open Telegram.Bot.Args
 

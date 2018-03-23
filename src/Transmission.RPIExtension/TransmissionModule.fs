@@ -3,7 +3,7 @@ open System
 open System.IO
 open Transmission.API.RPC
 open Transmission.API.RPC.Entity
-open Settings
+open Contracts
 
 let private client =
     lazy (new Client(transmissionAddress))

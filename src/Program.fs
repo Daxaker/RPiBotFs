@@ -2,7 +2,7 @@ namespace RPiBotFs
 
 open Microsoft.AspNetCore.Hosting
 open System.IO
-open Settings
+open Contracts
 
 module Program =
     let exitCode = 0

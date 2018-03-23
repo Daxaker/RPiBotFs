@@ -9,11 +9,9 @@ open Telegram.Bot
 open Telegram.Bot.Args
 open Telegram.Bot.Types
 open Telegram.Bot.Types.ReplyMarkups
-open Settings
 open Contracts
 open Autofac
 open System.Diagnostics
-
 
 let listeners() = 
     let extensionsDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),"extensions")
@@ -113,28 +111,15 @@ let OnMessageReceived (args:MessageEventArgs) =
 let OnMessageEventHandler =
     EventHandler<MessageEventArgs>(fun _ -> OnMessageReceived)
 
-//let OnCallbackQuery (args:CallbackQueryEventArgs) =
-//    let res =
-//        async{
-//            let! torrents = args.CallbackQuery.Data |> int |> GetTorrentAsync
-//            client.Value.SendTextMessageAsync(Types.ChatId args.CallbackQuery.Message.Chat.Id, torrents.Torrents.Single().Name) |> ignore
-//        }
-//    Async.Start res
-
-//let OnCallbackQueryEventHandler =
-//    EventHandler<CallbackQueryEventArgs>(fun _ -> OnCallbackQuery)
-
 let Start() =
     if not client.Value.IsReceiving then
         client.Value.OnMessage.AddHandler OnMessageEventHandler
-//        client.Value.OnCallbackQuery.AddHandler OnCallbackQueryEventHandler
         client.Value.StartReceiving()
 
 let Stop() =
     if client.Value.IsReceiving then
         client.Value.StopReceiving()
         client.Value.OnMessage.RemoveHandler OnMessageEventHandler
-//        client.Value.OnCallbackQuery.RemoveHandler OnCallbackQueryEventHandler
 
 let ShowConfig() = ReadConfiguration() |> Option.get
     
