@@ -13,20 +13,25 @@ open Contracts
 open Autofac
 open System.Diagnostics
 
+let syncObject = obj;
+
 let listeners() = 
     try
         let extensionsDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),"extensions")
-        let extensions = Directory.GetFiles(extensionsDir, "*.RPIExtension.dll")
+        let dirs = extensionsDir |> Directory.GetDirectories
+        
         let builder = new ContainerBuilder()
-        let map x =
-            let addon = Assembly.LoadFrom(x)
-            do builder.RegisterAssemblyTypes(addon).As<IListenerService>() |> ignore
-            
-        do extensions |> Seq.iter map
-        let container = builder.Build()
-        let lt = container.BeginLifetimeScope()
-        let ex = lt.Resolve<seq<IListenerService>>()
-        List.ofSeq ex
+        let getExtension dir =
+            let extensions = Directory.GetFiles(dir, "*.RPIExtension.dll")
+            let map x =
+                let addon = Assembly.LoadFrom(x)
+                do builder.RegisterAssemblyTypes(addon).As<IListenerService>() |> ignore
+                
+            do extensions |> Seq.iter map
+            let container = builder.Build()
+            let lt = container.BeginLifetimeScope()
+            lt.Resolve<seq<IListenerService>>()
+        dirs |> Seq.map getExtension |> Seq.concat |> List.ofSeq
     with exn -> printf "FAIL: %A" exn; List.empty
     
 let system  = 
@@ -114,14 +119,19 @@ let OnMessageEventHandler =
     EventHandler<MessageEventArgs>(fun _ -> OnMessageReceived)
 
 let Start() =
-    if not client.Value.IsReceiving then
-        client.Value.OnMessage.AddHandler OnMessageEventHandler
-        client.Value.StartReceiving()
+    let receiving() =
+        if not client.Value.IsReceiving then
+            client.Value.OnMessage.AddHandler OnMessageEventHandler
+            client.Value.StartReceiving()
+    lock syncObject receiving
+                            
 
 let Stop() =
-    if client.Value.IsReceiving then
-        client.Value.StopReceiving()
-        client.Value.OnMessage.RemoveHandler OnMessageEventHandler
+    let stop() =
+        if client.Value.IsReceiving then
+            client.Value.StopReceiving()
+            client.Value.OnMessage.RemoveHandler OnMessageEventHandler
+    lock syncObject stop
 
 let ShowConfig() = ReadConfiguration() |> Option.get
     

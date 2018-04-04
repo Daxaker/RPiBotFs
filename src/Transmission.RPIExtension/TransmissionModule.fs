@@ -10,7 +10,7 @@ let private client =
 let GetTorrentListAsync() =
     client.Value.TorrentGetAsync(TorrentFields.ALL_FIELDS) |> Async.AwaitTask
         
-let GetTorrentAsync (id:int) =
+let GetTorrentAsync (id) =
     client.Value.TorrentGetAsync ([|TorrentFields.NAME|], [|id|]) |> Async.AwaitTask
        
 let GetTorrentsList() =
