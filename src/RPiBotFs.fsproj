@@ -25,6 +25,9 @@
   <ItemGroup>
     <ProjectReference Include="Contracts\Contracts.fsproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Views\**\*" CopyToOutputDirectory="Always" />
+  </ItemGroup>
   <Target Name="CopyFiles" AfterTargets="build">
     <Copy SourceFiles="variables.json" DestinationFolder="$(OutputPath)" />
   </Target>
