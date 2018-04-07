@@ -57,16 +57,16 @@ module Settings =
         Path.Combine(homePath, UserSettingsPath)
     
     let settings =
-        let userSettings =
-            if File.Exists path then
-                Some(JObject.Parse(File.ReadAllText(path)).ToObject<JConfig>())
+        let getFile fPath =
+            if File.Exists fPath then
+                Some(JObject.Parse(File.ReadAllText(fPath)).ToObject<JConfig>())
             else
                 None
-        let appSettings =
-            JObject.Parse(File.ReadAllText(AppSettingsFile)).ToObject<JConfig>()
+        let userSettings = getFile path            
+        let appSettings = getFile AppSettingsFile
         seq {
             yield userSettings
-            yield Some(appSettings)
+            yield appSettings
         } 
     
     let (?) (this : #seq<JConfig option>) prop: 'Result option =

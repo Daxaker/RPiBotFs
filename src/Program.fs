@@ -3,6 +3,7 @@ namespace RPiBotFs
 open Microsoft.AspNetCore.Hosting
 open System.IO
 open Contracts
+open Microsoft.AspNetCore
 
 module Program =
     let exitCode = 0
@@ -10,8 +11,8 @@ module Program =
     [<EntryPoint>]
     let main _ =
         let host =
-            WebHostBuilder() 
-                .UseContentRoot(Directory.GetCurrentDirectory())
+            WebHost
+                .CreateDefaultBuilder() 
                 .UseKestrel()
                 .UseStartup<Startup>()
                 .UseUrls(sprintf "http://+:%d" webInterfacePort)
