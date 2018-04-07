@@ -1,17 +1,12 @@
 module BotModule
 
 open System
-open System.Linq
 open System.IO
 open System.Reflection
 open Akka.FSharp
-open Telegram.Bot
 open Telegram.Bot.Args
-open Telegram.Bot.Types
-open Telegram.Bot.Types.ReplyMarkups
 open Contracts
 open Autofac
-open System.Diagnostics
 
 let syncObject = obj;
 
@@ -31,7 +26,7 @@ let listeners() =
             let container = builder.Build()
             let lt = container.BeginLifetimeScope()
             lt.Resolve<seq<IListenerService>>()
-        dirs |> Seq.map getExtension |> Seq.concat |> List.ofSeq
+        dirs |> Seq.collect getExtension |> List.ofSeq
     with exn -> printf "FAIL: %A" exn; List.empty
     
 let system  = 

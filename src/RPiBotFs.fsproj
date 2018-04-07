@@ -5,26 +5,18 @@
   <ItemGroup>
     <Compile Include="BotModule.fs" />
     <Compile Include="Startup.fs" />
-    <Compile Include="Controllers/ApiController.fs" />
+    <Compile Include="Pages/Index.cshtml.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.6.2" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Owin" Version="4.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.*" />
-    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="2.*" />
-    <PackageReference Include="Microsoft.AspNetCore" Version="2.*" />
     <PackageReference Include="Telegram.Bot" Version="14.2.0-rc-452" />
     <PackageReference Include="Akka.FSharp" Version="1.2.3" />
     <PackageReference Include="Akka" Version="1.2.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Contracts\Contracts.fsproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Views\**\*" CopyToOutputDirectory="Always" />
   </ItemGroup>
   <Target Name="CopyFiles" AfterTargets="build">
     <Copy SourceFiles="variables.json" DestinationFolder="$(OutputPath)" />

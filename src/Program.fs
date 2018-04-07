@@ -13,7 +13,7 @@ module Program =
         let host =
             WebHost
                 .CreateDefaultBuilder() 
-                .UseKestrel()
+                //.UseKestrel()
                 .UseStartup<Startup>()
                 .UseUrls(sprintf "http://+:%d" webInterfacePort)
                 .Build()
