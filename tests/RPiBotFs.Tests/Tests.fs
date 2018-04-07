@@ -5,7 +5,7 @@ open Xunit
 open RPiBotFs
 
 [<Fact>]
-let ``good test`` () =
-    Assert.IsTrue(true);
+let ``good_test`` () =
+    Assert.True(true);
    
     
