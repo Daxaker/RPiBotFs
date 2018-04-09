@@ -6,6 +6,8 @@
     <Compile Include="BotModule.fs" />
     <Compile Include="Startup.fs" />
     <Compile Include="Pages/Index.cshtml.fs" />
+    <Compile Include="Pages/ShowConfig.cshtml.fs" />
+    <Compile Include="Pages/Error.cshtml.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>

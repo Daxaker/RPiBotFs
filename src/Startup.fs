@@ -18,8 +18,8 @@ type Startup private () =
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     member __.Configure(app: IApplicationBuilder, env: IHostingEnvironment) =
         match env.IsDevelopment() with
-        |true -> app.UseDeveloperExceptionPage() |> ignore
-        |_ -> app.UseExceptionHandler("/Error") |> ignore
+        |_ -> app.UseDeveloperExceptionPage() |> ignore
+       // |_ -> app.UseExceptionHandler("/Error") |> ignore
         app.UseMvc(fun routes ->
                        routes.MapRoute("default", "{controller}/{action=Index}/{id?}") |> ignore
             ) |> ignore

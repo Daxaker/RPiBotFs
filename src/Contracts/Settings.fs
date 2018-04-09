@@ -7,6 +7,7 @@ open Newtonsoft.Json.Serialization
 open System
 open Newtonsoft.Json
 
+[<CLIMutable>]
 type JConfig = {
     [<JsonProperty(PropertyName = "transmission")>]
     transmission:string

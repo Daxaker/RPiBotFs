@@ -1,0 +1,12 @@
+﻿@page
+@model ShowConfigModel
+@{
+}
+<form method="POST">
+        <div>Transmission: <input asp-for="Configs.transmission" size="120"/></div>
+        <div>Bot key: <input asp-for="Configs.botKey" size="120"/></div>
+        <div>Ftp: <input asp-for="Configs.ftpPath" size="120"/></div>
+        <div>WhiteList enable: <input asp-for="Configs.isWhiteListEnabled" size="120"/></div>
+        <div>Port: <input asp-for="Configs.listeningPort" size="120"/></div>
+        <input type="submit" />
+    </form>
