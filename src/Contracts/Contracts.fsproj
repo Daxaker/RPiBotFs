@@ -8,6 +8,7 @@
     <Compile Include="TelegramBotClientModule.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="4.3.4"/>
     <PackageReference Include="Newtonsoft.Json.FSharp" Version="3.2.2" />
     <PackageReference Include="Telegram.Bot" Version="14.2.0-rc-452" />
   </ItemGroup>

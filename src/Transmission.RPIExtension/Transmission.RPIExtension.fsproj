@@ -11,6 +11,7 @@
     <Compile Include="TransmissionService.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="4.3.4"/>
     <PackageReference Include="Telegram.Bot" Version="14.2.0-rc-452" />
     <PackageReference Include="Transmission.API.RPC" Version="2.0.0" />
   </ItemGroup>

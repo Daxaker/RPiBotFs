@@ -6,7 +6,7 @@ open Transmission.API.RPC.Entity
 open Contracts
 
 let private client =
-    lazy (new Client(transmissionAddress))
+    lazy (new Client(transmissionAddress.Value))
 let GetTorrentListAsync() =
     client.Value.TorrentGetAsync(TorrentFields.ALL_FIELDS) |> Async.AwaitTask
         

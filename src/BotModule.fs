@@ -96,7 +96,7 @@ let parseCommand (command:string) (args:MessageEventArgs) =
 
 let isAuthorized = function
     |{UserChatId = _; Command = NonSecureRequest _} -> true
-    |{UserChatId = chatId; Command = _} -> inWhitelist <| string chatId
+    |{UserChatId = chatId; Command = _} -> chatId |> string |> inWhitelist  
 
 let sendCommand = function
     |{UserChatId=_; Command = SetDefaultHandler} -> actorRef <! Reset

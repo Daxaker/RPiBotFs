@@ -6,3 +6,4 @@ published/
 publish/
 Interactive/
 src/.DS_Store
+*.user

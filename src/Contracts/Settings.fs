@@ -24,9 +24,13 @@ type JConfig = {
 }
 [<AutoOpen>]
 module Settings =
-
-    [<Literal>]
-    let UserSettingsPath = ".config/rpibot.json"
+    let SetUserSettingsPath =
+        let mutable memory = null 
+        let res path =
+            if isNull memory then 
+                memory <- path
+            memory
+        res
     [<Literal>]
     let HomePathNix = "HOME"
     [<Literal>]
@@ -48,64 +52,58 @@ module Settings =
     let arrayValue arr =
         getValue arr [||]
     
-    let homePath =
-        if (Environment.OSVersion.Platform = PlatformID.Unix || Environment.OSVersion.Platform = PlatformID.MacOSX) then
-            Environment.GetEnvironmentVariable(HomePathNix)
-        else
-            Environment.ExpandEnvironmentVariables(HomePathWindows);
-    
-    let private path =
-        Path.Combine(homePath, UserSettingsPath)
-    
-    let settings =
+    let settings = lazy(
         let getFile fPath =
-            if File.Exists fPath then
+            if String.IsNullOrEmpty(fPath) |> not && File.Exists fPath then
                 Some(JObject.Parse(File.ReadAllText(fPath)).ToObject<JConfig>())
             else
                 None
-        let userSettings = getFile path            
+        let userSettings = "" |> SetUserSettingsPath |> getFile           
         let appSettings = getFile AppSettingsFile
         seq {
             yield userSettings
             yield appSettings
-        } 
+        })
     
-    let (?) (this : #seq<JConfig option>) prop: 'Result option =
+    let (?) (this : Lazy<#seq<JConfig option>>) prop: 'Result option =
       let pick toption = 
         try
-            let t = toption |> Option.get
-            let v = t.GetType().GetProperty(prop).GetValue(t, null)
-            if v |> isNull |> not then 
-                Some(v :?> 'Result)
-            else None
+           if toption |> Option.isNone then
+                None
+           else 
+                let t = toption |> Option.get
+                let v = t.GetType().GetProperty(prop).GetValue(t, null)
+                if v |> isNull |> not then 
+                    Some(v :?> 'Result)
+                else None
         with _ -> printfn "JConfig param %s missing" prop 
                   None
-      this |> Seq.tryPick pick
+      this.Value |> Seq.tryPick pick
     
     let transmissionAddress =
-        stringValue settings?transmission
+        lazy(stringValue settings?transmission)
     
     let botKey =
-        stringValue settings?botKey
+        lazy(stringValue settings?botKey)
     
     let ftpPath =
-        stringValue settings?ftpPath
+        lazy(stringValue settings?ftpPath)
     
     let isWhiteListEnabled =
-        boolValue settings?isWhiteListEnabled
+        lazy(boolValue settings?isWhiteListEnabled)
     
-    let whiteListArray:string[] = 
-        arrayValue settings?whiteList
+    let whiteListArray:Lazy<string[]> = 
+        lazy(arrayValue settings?whiteList)
     
     let inWhitelist user =
-        if isWhiteListEnabled |> not then
+        if isWhiteListEnabled.Value |> not then
             true
         else
             let innerArray = whiteListArray
-            innerArray |> Seq.exists (fun x -> user = x)
+            innerArray.Value |> Seq.exists (fun x -> user = x)
     
-    let webInterfacePort:int =
+    let webInterfacePort():int  =
         settings?listeningPort |> Option.get
     
     let ReadConfiguration() =
-        settings |> Seq.tryPick id
+        settings.Value |> Seq.tryPick id

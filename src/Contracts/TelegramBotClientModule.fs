@@ -10,7 +10,7 @@ open Telegram.Bot.Types.ReplyMarkups
 module TelegramModule =
 
     let client =
-        lazy(new TelegramBotClient(botKey))
+        lazy(new TelegramBotClient(botKey.Value))
     
     let getCallbackButton caption response =
         [|InlineKeyboardButton.WithCallbackData(caption, response)|] :> IEnumerable<InlineKeyboardButton>
