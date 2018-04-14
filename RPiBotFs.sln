@@ -12,8 +12,6 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "RPiBotFs.Tests", "tests\RPi
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Contracts", "src\Contracts\Contracts.fsproj", "{FB8F2274-D111-4E03-AD4E-8BE3ADCEC8B4}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Transmission.RPIExtension", "src\Transmission.RPIExtension\Transmission.RPIExtension.fsproj", "{ABA64FC3-84D2-4628-9FD5-4BEBBB18F27B}"
-EndProject
 Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{7164557B-1E19-4FF6-B971-C972BD34BC16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -28,10 +26,6 @@ Global
 		{FB8F2274-D111-4E03-AD4E-8BE3ADCEC8B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB8F2274-D111-4E03-AD4E-8BE3ADCEC8B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB8F2274-D111-4E03-AD4E-8BE3ADCEC8B4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ABA64FC3-84D2-4628-9FD5-4BEBBB18F27B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ABA64FC3-84D2-4628-9FD5-4BEBBB18F27B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ABA64FC3-84D2-4628-9FD5-4BEBBB18F27B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ABA64FC3-84D2-4628-9FD5-4BEBBB18F27B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +35,5 @@ Global
 		{7164557B-1E19-4FF6-B971-C972BD34BC16} = {8BEF322A-D3D6-411C-929A-F5E33E73A583}
 		{A62F5B41-F0B2-45F4-88B2-EFFF62510377} = {23A46DC7-AB49-401F-BF26-4B36E8ECD6F0}
 		{FB8F2274-D111-4E03-AD4E-8BE3ADCEC8B4} = {8BEF322A-D3D6-411C-929A-F5E33E73A583}
-		{ABA64FC3-84D2-4628-9FD5-4BEBBB18F27B} = {8BEF322A-D3D6-411C-929A-F5E33E73A583}
 	EndGlobalSection
 EndGlobal
