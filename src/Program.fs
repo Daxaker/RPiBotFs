@@ -2,7 +2,6 @@ namespace RPiBotFs
 
 open Argu
 open Microsoft.AspNetCore.Hosting
-open System.IO
 open Contracts
 open Microsoft.AspNetCore
 
@@ -12,11 +11,9 @@ with
     interface IArgParserTemplate with
         member s.Usage =
             match s with
-            | ConfigFile(path) -> """path to config file"""
+            | ConfigFile(_) -> """path to config file"""
 
 module Program =
-    open Argu
-
     let exitCode = 0
     
     [<EntryPoint>]
@@ -24,7 +21,9 @@ module Program =
         let parser = ArgumentParser.Create<CLIArgs>()
         let cliArgs = parser.Parse(args)
         let configFile = cliArgs.TryGetResult ConfigFile
-        defaultArg configFile "" |> SetUserSettingsPath |> ignore
+        let cfgFile = defaultArg configFile ""
+        do printfn "External config %s" cfgFile
+        cfgFile |> SetPath |> ignore
         let host =
             WebHost
                 .CreateDefaultBuilder() 

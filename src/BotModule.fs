@@ -128,7 +128,7 @@ let Stop() =
             client.Value.OnMessage.RemoveHandler OnMessageEventHandler
     lock syncObject stop
 
-let ShowConfig() = ReadConfiguration() |> Option.get
+let ShowConfig() = readConfiguration()
     
 let TestMe() =
     client.Value.TestApiAsync()
