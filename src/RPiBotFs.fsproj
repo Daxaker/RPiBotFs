@@ -4,12 +4,12 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   <ItemGroup>
-	<DotNetCliToolReference Include="dotnet-fake" Version="5.0.0-*" />
+    <DotNetCliToolReference Include="dotnet-fake" Version="5.0.0-*" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BotModule.fs" />
     <Compile Include="Startup.fs" />
-    <Compile Include="Pages\Start.cshtml.fs" />
+    <Compile Include="Pages/Start.cshtml.fs" />
     <Compile Include="Pages/Index.cshtml.fs" />
     <Compile Include="Pages/ShowConfig.cshtml.fs" />
     <Compile Include="Pages/Error.cshtml.fs" />
@@ -25,6 +25,16 @@
     <PackageReference Include="Akka" Version="1.2.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="Contracts\Contracts.fsproj" />
+    <ProjectReference Include="Contracts/Contracts.fsproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Transmission.RPIExtension\bin\Debug\linux-arm\Transmission.RPIExtension.deps.json" />
+    <_ContentIncludedByDefault Remove="Transmission.RPIExtension\bin\Debug\Transmission.RPIExtension.deps.json" />
+    <_ContentIncludedByDefault Remove="Transmission.RPIExtension\bin\Release\Transmission.RPIExtension.deps.json" />
+    <_ContentIncludedByDefault Remove="Contracts\bin\Debug\Contracts.deps.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Contracts" />
+    <Folder Include="Transmission.RPIExtension" />
   </ItemGroup>
 </Project>
